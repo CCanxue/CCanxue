@@ -1,0 +1,115 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled5.ipynb",
+      "provenance": [],
+      "toc_visible": true,
+      "authorship_tag": "ABX9TyPHgLM9Ph2iBc4uluBaM5pe",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/CCanxue/CCanxue/blob/main/%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "线性回归的深度学习框架实现"
+      ],
+      "metadata": {
+        "id": "aLXwaNqdHyqU"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#读取数据集\n",
+        "import numpy as np\n",
+        "from torch.utils import data\n",
+        "import torch\n",
+        "from d2l import torch as d2l\n",
+        "'''def synthetic_data(w,b,num_examples):\n",
+        "  x=torch.normal(0,1,(num_examples,len(w)))\n",
+        "  y=torch.matmul(x,w)+b   \n",
+        "  y+=torch.normal(0,0.01,y.shape) #节省内存\n",
+        "  return x,y.reshape((-1,1))'''\n",
+        "true_w=torch.tensor([2,-3.4])\n",
+        "true_b=torch.tensor(4.2)\n",
+        "features,labels=d2l.synthetic_data(true_w,true_b,1000)\n",
+        "def load_array(data_arrays,batch_size,is_train=True): \n",
+        "  dataset=data.TensorDataset(*data_arrays)\n",
+        "  return data.DataLoader(dataset,batch_size,shuffle=is_train)\n",
+        "batch_size=10\n",
+        "data_iter=load_array((features,labels),batch_size)\n",
+        "#next(iter(data_iter))\n",
+        "#定义模型\n",
+        "from torch import nn\n",
+        "net=nn.Sequential(nn.Linear(2,1))\n",
+        "#初始化模型参数与损失函数\n",
+        "net[0].weight.data.normal_(0.0,0.1)\n",
+        "net[0].bias.data.fill_(0)\n",
+        "loss=nn.MSELoss()\n",
+        "#定义优化算法\n",
+        "trainer=torch.optim.SGD(net.parameters(),lr=0.03)\n",
+        "#训练\n",
+        "num_epoch=3\n",
+        "for epoch in range(num_epoch):\n",
+        "  for x,y in data_iter:\n",
+        "    trainer.zero_grad() #在反向传播计算梯度前清空梯度\n",
+        "    l=loss(net(x),y) \n",
+        "    l.backward()\n",
+        "    trainer.step()\n",
+        "  l=loss(net(features),labels)\n",
+        "  print(f\"epoch{epoch+1},loss{l:f}\")\n",
+        "w=net[0].weight.data\n",
+        "b=net[0].bias.data\n",
+        "print(f\"w的估计误差为{true_w-w}\")\n",
+        "print(f\"b的估计误差为{true_b-b}\")\n",
+        "for param in net.parameters():\n",
+        "  print(param)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "0CnGQ2OlpbCn",
+        "outputId": "9cf7e2cc-2ee1-46a9-ba04-6b5049681a71"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "epoch1,loss0.000252\n",
+            "epoch2,loss0.000102\n",
+            "epoch3,loss0.000104\n",
+            "w的估计误差为tensor([[-0.0006, -0.0015]])\n",
+            "b的估计误差为tensor([-0.0003])\n",
+            "Parameter containing:\n",
+            "tensor([[ 2.0006, -3.3985]], requires_grad=True)\n",
+            "Parameter containing:\n",
+            "tensor([4.2003], requires_grad=True)\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
